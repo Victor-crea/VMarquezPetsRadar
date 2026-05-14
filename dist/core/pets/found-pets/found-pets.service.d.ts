@@ -5,6 +5,7 @@ import { MapboxService } from '../../mapbox/mapbox.service';
 import { LostPet } from '../lost-pets/lost-pet.entity';
 import { FoundPet } from './found-pet.entity';
 import { CreateFoundPetDto } from './dto/create-found-pet.dto';
+import { CacheService } from '../../cache/cache.service';
 type LostPetMatch = LostPet & {
     distance: number;
 };
@@ -14,7 +15,9 @@ export declare class FoundPetsService {
     private readonly mailService;
     private readonly mapbox;
     private readonly config;
-    constructor(foundPetRepo: Repository<FoundPet>, lostPetRepo: Repository<LostPet>, mailService: MailService, mapbox: MapboxService, config: ConfigService);
+    private readonly cacheService;
+    constructor(foundPetRepo: Repository<FoundPet>, lostPetRepo: Repository<LostPet>, mailService: MailService, mapbox: MapboxService, config: ConfigService, cacheService: CacheService);
+    findAll(): Promise<FoundPet[]>;
     create(dto: CreateFoundPetDto): Promise<{
         foundPet: FoundPet;
         matches: Array<{

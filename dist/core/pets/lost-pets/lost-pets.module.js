@@ -12,12 +12,16 @@ const typeorm_1 = require("@nestjs/typeorm");
 const lost_pet_entity_1 = require("./lost-pet.entity");
 const lost_pets_controller_1 = require("./lost-pets.controller");
 const lost_pets_service_1 = require("./lost-pets.service");
+const cache_module_1 = require("../../cache/cache.module");
 let LostPetsModule = class LostPetsModule {
 };
 exports.LostPetsModule = LostPetsModule;
 exports.LostPetsModule = LostPetsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([lost_pet_entity_1.LostPet])],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([lost_pet_entity_1.LostPet]),
+            cache_module_1.CacheModule,
+        ],
         controllers: [lost_pets_controller_1.LostPetsController],
         providers: [lost_pets_service_1.LostPetsService],
         exports: [typeorm_1.TypeOrmModule, lost_pets_service_1.LostPetsService],

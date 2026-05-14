@@ -21,11 +21,20 @@ let FoundPetsController = class FoundPetsController {
     constructor(foundPetsService) {
         this.foundPetsService = foundPetsService;
     }
+    async findAll() {
+        return await this.foundPetsService.findAll();
+    }
     async create(dto) {
         return await this.foundPetsService.create(dto);
     }
 };
 exports.FoundPetsController = FoundPetsController;
+__decorate([
+    (0, common_1.Get)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], FoundPetsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),

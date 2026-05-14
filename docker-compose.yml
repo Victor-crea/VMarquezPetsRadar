@@ -1,16 +1,71 @@
 services:
-  db:
-    image: postgis/postgis:16-3.4
-    container_name: petradar-db
-    environment:
-      POSTGRES_DB: petradar
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+  pet-radar:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pet-radar:latest
+    container_name: PetRadarAPI
     ports:
-      - "5432:5432"
+      - 3000:3000
+    environment:
+      PORT: ${PORT}
+      MAPBOX_TOKEN: ${MAPBOX_TOKEN}
+      DB_HOST: postgres
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_USERNAME: ${DB_USERNAME}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MAILER_EMAIL: ${MAILER_EMAIL}
+      MAILER_PASSWORD: ${MAILER_PASSWORD}
+      MAILER_SERVICE: ${MAILER_SERVICE}
+      APPINSIGHTS_CONNECTION_STRING: ${APPINSIGHTS_CONNECTION_STRING}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      MAIL_FROM: ${MAIL_FROM}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - pet-network
+
+  postgres:
+    image: postgis/postgis:16-master
+    container_name: postgresDBPetRadar
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     volumes:
-      - petradar_pgdata:/var/lib/postgresql/data
+      - postgres_data_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pet-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: redisPetRadar
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_data:/data
+    networks:
+      - pet-network
 
 volumes:
-  petradar_pgdata:
+  postgres_data_db:
+  redis_data:
 
+networks:
+  pet-network:
+    driver: bridge

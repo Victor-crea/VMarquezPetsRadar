@@ -17,10 +17,27 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const lost_pet_entity_1 = require("./lost-pet.entity");
+const cache_service_1 = require("../../cache/cache.service");
+const CACHE_KEY_LOST_PETS = 'lost-pets:active';
 let LostPetsService = class LostPetsService {
     lostPetRepo;
-    constructor(lostPetRepo) {
+    cacheService;
+    constructor(lostPetRepo, cacheService) {
         this.lostPetRepo = lostPetRepo;
+        this.cacheService = cacheService;
+    }
+    async findAllActive() {
+        try {
+            const cached = await this.cacheService.get(CACHE_KEY_LOST_PETS);
+            if (cached && cached.length > 0)
+                return cached;
+            const pets = await this.lostPetRepo.find({ where: { isActive: true } });
+            await this.cacheService.set(CACHE_KEY_LOST_PETS, pets);
+            return pets;
+        }
+        catch {
+            return await this.lostPetRepo.find({ where: { isActive: true } });
+        }
     }
     async create(dto) {
         const entity = this.lostPetRepo.create({
@@ -39,13 +56,16 @@ let LostPetsService = class LostPetsService {
             lostDate: new Date(dto.lostDate),
             isActive: dto.isActive ?? true,
         });
-        return await this.lostPetRepo.save(entity);
+        const saved = await this.lostPetRepo.save(entity);
+        await this.cacheService.delete(CACHE_KEY_LOST_PETS);
+        return saved;
     }
 };
 exports.LostPetsService = LostPetsService;
 exports.LostPetsService = LostPetsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(lost_pet_entity_1.LostPet)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        cache_service_1.CacheService])
 ], LostPetsService);
 //# sourceMappingURL=lost-pets.service.js.map

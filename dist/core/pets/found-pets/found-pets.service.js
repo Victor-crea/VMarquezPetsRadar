@@ -21,18 +21,35 @@ const mail_service_1 = require("../../mail/mail.service");
 const mapbox_service_1 = require("../../mapbox/mapbox.service");
 const lost_pet_entity_1 = require("../lost-pets/lost-pet.entity");
 const found_pet_entity_1 = require("./found-pet.entity");
+const cache_service_1 = require("../../cache/cache.service");
+const CACHE_KEY_FOUND_PETS = 'found-pets:all';
 let FoundPetsService = class FoundPetsService {
     foundPetRepo;
     lostPetRepo;
     mailService;
     mapbox;
     config;
-    constructor(foundPetRepo, lostPetRepo, mailService, mapbox, config) {
+    cacheService;
+    constructor(foundPetRepo, lostPetRepo, mailService, mapbox, config, cacheService) {
         this.foundPetRepo = foundPetRepo;
         this.lostPetRepo = lostPetRepo;
         this.mailService = mailService;
         this.mapbox = mapbox;
         this.config = config;
+        this.cacheService = cacheService;
+    }
+    async findAll() {
+        try {
+            const cached = await this.cacheService.get(CACHE_KEY_FOUND_PETS);
+            if (cached && cached.length > 0)
+                return cached;
+            const pets = await this.foundPetRepo.find();
+            await this.cacheService.set(CACHE_KEY_FOUND_PETS, pets);
+            return pets;
+        }
+        catch {
+            return await this.foundPetRepo.find();
+        }
     }
     async create(dto) {
         const foundPet = await this.foundPetRepo.save(this.foundPetRepo.create({
@@ -75,6 +92,7 @@ let FoundPetsService = class FoundPetsService {
                 distance: lost.distance,
                 notifiedTo: to,
             });
+            await this.cacheService.delete(CACHE_KEY_FOUND_PETS);
         }
         return { foundPet, matches: notified };
     }
@@ -145,7 +163,8 @@ exports.FoundPetsService = FoundPetsService = __decorate([
         typeorm_2.Repository,
         mail_service_1.MailService,
         mapbox_service_1.MapboxService,
-        config_1.ConfigService])
+        config_1.ConfigService,
+        cache_service_1.CacheService])
 ], FoundPetsService);
 function escapeHtml(input) {
     return input

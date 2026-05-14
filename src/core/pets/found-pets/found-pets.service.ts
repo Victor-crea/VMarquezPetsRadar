@@ -7,9 +7,10 @@ import { MapboxService } from '../../mapbox/mapbox.service';
 import { LostPet } from '../lost-pets/lost-pet.entity';
 import { FoundPet } from './found-pet.entity';
 import { CreateFoundPetDto } from './dto/create-found-pet.dto';
+import { CacheService } from '../../cache/cache.service';
 
 type LostPetMatch = LostPet & { distance: number };
-
+const CACHE_KEY_FOUND_PETS = 'found-pets:all';
 @Injectable()
 export class FoundPetsService {
   constructor(
@@ -20,7 +21,21 @@ export class FoundPetsService {
     private readonly mailService: MailService,
     private readonly mapbox: MapboxService,
     private readonly config: ConfigService,
+    private readonly cacheService: CacheService,
   ) {}
+
+  async findAll(): Promise<FoundPet[]> {
+  try {
+    const cached = await this.cacheService.get<FoundPet[]>(CACHE_KEY_FOUND_PETS);
+    if (cached && cached.length > 0) return cached;
+
+    const pets = await this.foundPetRepo.find();
+    await this.cacheService.set(CACHE_KEY_FOUND_PETS, pets);
+    return pets;
+  } catch {
+    return await this.foundPetRepo.find();
+  }
+}
 
   async create(dto: CreateFoundPetDto): Promise<{
     foundPet: FoundPet;
@@ -81,6 +96,8 @@ export class FoundPetsService {
         distance: lost.distance,
         notifiedTo: to,
       });
+
+      await this.cacheService.delete(CACHE_KEY_FOUND_PETS);
     }
 
     return { foundPet, matches: notified };

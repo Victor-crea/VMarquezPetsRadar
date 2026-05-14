@@ -3,6 +3,7 @@ import { FoundPetsService } from './found-pets.service';
 export declare class FoundPetsController {
     private readonly foundPetsService;
     constructor(foundPetsService: FoundPetsService);
+    findAll(): Promise<import("./found-pet.entity").FoundPet[]>;
     create(dto: CreateFoundPetDto): Promise<{
         foundPet: import("./found-pet.entity").FoundPet;
         matches: Array<{

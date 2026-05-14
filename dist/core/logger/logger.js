@@ -32,35 +32,41 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.logger = void 0;
 const appInsights = __importStar(require("applicationinsights"));
-const core_1 = require("@nestjs/core");
-const app_module_1 = require("./app.module");
-const common_1 = require("@nestjs/common");
+const winston_1 = __importDefault(require("winston"));
 const connectionString = process.env.APPINSIGHTS_CONNECTION_STRING;
 if (connectionString) {
     appInsights
         .setup(connectionString)
-        .setAutoDependencyCorrelation(true)
-        .setAutoCollectRequests(true)
-        .setAutoCollectPerformance(true, true)
-        .setAutoCollectExceptions(true)
-        .setAutoCollectDependencies(true)
-        .setAutoCollectConsole(true)
-        .setUseDiskRetryCaching(true)
         .setSendLiveMetrics(true)
+        .setAutoCollectConsole(false)
         .start();
-    console.log('Application Insights inicializado');
 }
-async function bootstrap() {
-    const app = await core_1.NestFactory.create(app_module_1.AppModule);
-    app.useGlobalPipes(new common_1.ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-        transformOptions: { enableImplicitConversion: true },
-    }));
-    await app.listen(process.env.PORT ?? 3000);
-}
-bootstrap();
-//# sourceMappingURL=main.js.map
+const aiClient = appInsights.defaultClient;
+const appInsightsTransport = new winston_1.default.transports.Console({
+    level: 'info',
+    format: winston_1.default.format.printf((obj) => {
+        const { level, message, timestamp } = obj;
+        if (aiClient) {
+            aiClient.trackTrace({
+                message: `[${level}] ${message} ${timestamp}`,
+                properties: { timestamp: String(timestamp) },
+            });
+        }
+        return `[${level}] ${message} ${timestamp}`;
+    }),
+});
+exports.logger = winston_1.default.createLogger({
+    level: 'info',
+    format: winston_1.default.format.combine(winston_1.default.format.timestamp(), winston_1.default.format.json()),
+    transports: [
+        new winston_1.default.transports.Console(),
+        appInsightsTransport,
+    ],
+});
+//# sourceMappingURL=logger.js.map

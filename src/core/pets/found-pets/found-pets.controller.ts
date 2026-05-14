@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { CreateFoundPetDto } from './dto/create-found-pet.dto';
 import { FoundPetsService } from './found-pets.service';
 
@@ -6,9 +6,13 @@ import { FoundPetsService } from './found-pets.service';
 export class FoundPetsController {
   constructor(private readonly foundPetsService: FoundPetsService) {}
 
+  @Get()                                   // <-- NUEVO
+  async findAll() {
+    return await this.foundPetsService.findAll();
+  }
+
   @Post()
   async create(@Body() dto: CreateFoundPetDto) {
     return await this.foundPetsService.create(dto);
   }
 }
-

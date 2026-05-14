@@ -15,6 +15,7 @@ const lost_pet_entity_1 = require("../lost-pets/lost-pet.entity");
 const found_pet_entity_1 = require("./found-pet.entity");
 const found_pets_controller_1 = require("./found-pets.controller");
 const found_pets_service_1 = require("./found-pets.service");
+const cache_module_1 = require("../../cache/cache.module");
 let FoundPetsModule = class FoundPetsModule {
 };
 exports.FoundPetsModule = FoundPetsModule;
@@ -24,6 +25,7 @@ exports.FoundPetsModule = FoundPetsModule = __decorate([
             typeorm_1.TypeOrmModule.forFeature([found_pet_entity_1.FoundPet, lost_pet_entity_1.LostPet]),
             mail_module_1.MailModule,
             mapbox_module_1.MapboxModule,
+            cache_module_1.CacheModule,
         ],
         controllers: [found_pets_controller_1.FoundPetsController],
         providers: [found_pets_service_1.FoundPetsService],
