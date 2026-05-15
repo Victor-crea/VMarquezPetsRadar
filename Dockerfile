@@ -2,7 +2,6 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Instalar CLI globalmente para evitar colisión de cache entre stages
 RUN npm install -g @nestjs/cli
 
 COPY package*.json ./
@@ -13,8 +12,6 @@ COPY src ./src
 COPY nest-cli.json tsconfig.json tsconfig.build.json ./
 
 RUN nest build
-
-# ------------------------------------
 
 FROM node:20-alpine AS production
 
